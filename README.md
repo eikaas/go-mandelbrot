@@ -1,2 +1,3 @@
 # go-mandelbrot
-Golang mandelbrot test
+Drawing Mandelbrot in Golang
+
