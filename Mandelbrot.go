@@ -1,5 +1,6 @@
 package main
 
+import "fmt"
 import "math/cmplx"
 import "image/color/palette"
 
@@ -68,12 +69,17 @@ func (m *Mandelbrot) SetMaxIterations(iterations int) {
 	m.max_iterations = iterations
 }
 
+func (m *Mandelbrot) SetInitialC(c1, c2 float64) {
+	m.initial_c = complex(c1, c2)
+}
+
 func (m *Mandelbrot) Render() {
 	var iterations int
 
 	var z complex128
 	var c complex128
 
+	fmt.Printf("\n === Render === \nC=%g, Bounds=([%1.2f, %1.2f], [%1.2f, %1.2f]), Epsilon=%1.5f\n", m.initial_c, m.x, m.y, m.w, m.h, m.epsilon)
 	// Loop from x=-2.0 to x=2.0
 	for x := m.x; x <= m.w; x += m.epsilon {
 		// Loop from y=-2.0 to y=2.0
@@ -83,6 +89,9 @@ func (m *Mandelbrot) Render() {
 
 			z = complex(x, y)
 			c = m.initial_c
+
+			fmt.Printf("\r")
+			fmt.Printf("Iterating: (%1.2f, %1.2f)", x, y)
 
 			for cmplx.Abs(z) < 2 && iterations < m.max_iterations {
 				z = z*z + c
@@ -102,4 +111,5 @@ func (m *Mandelbrot) Render() {
 			}
 		}
 	}
+	fmt.Printf("\nFinished!\n\n")
 }

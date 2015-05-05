@@ -1,6 +1,7 @@
 package main
 
 import "os"
+import "log"
 import "image"
 import "image/color"
 import "image/png"
@@ -22,6 +23,11 @@ func (i *Image) GetWidth() int {
 func NewImage(width int, height int, bg_color color.Color) *Image {
 	var img Image
 
+	if width == 0 || height == 0 {
+		log.Println("Image cannot be zero")
+		os.Exit(1)
+	}
+
 	img.width = width
 	img.height = height
 
@@ -39,6 +45,7 @@ func NewImage(width int, height int, bg_color color.Color) *Image {
 
 func (i *Image) Save(filename string) error {
 	file, err := os.Create(filename)
+	log.Println("Image written to", filename)
 
 	if err != nil {
 		return err
