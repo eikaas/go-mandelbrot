@@ -1,6 +1,7 @@
 package main
 
 import "fmt"
+import "math"
 import "math/cmplx"
 import "image/color/palette"
 
@@ -20,28 +21,34 @@ type Mandelbrot struct {
 	initial_c complex128 // Initial value of C. Interesting
 }
 
-func NewMandelbrot(i *Image) *Mandelbrot {
+func NewMandelbrot() *Mandelbrot {
 	var m Mandelbrot
-
-	m.img = i
 
 	m.initial_c = complex(-1.0, -0.25)
 
-	m.max_iterations = 128
+	m.max_iterations = 10
 	m.epsilon = 0.0005
 
-	m.x = -1.5
-	m.w = 1.5
-	m.y = -1.5
-	m.h = 1.5
-
-	m.xoffset = float64(i.GetWidth() / 2)
-	m.yoffset = float64(i.GetWidth() / 2)
-
-	m.xzoom = 1024.0
-	m.yzoom = 1024.0
+	/*
+		m.x = -1.5
+		m.w = 1.5
+		m.y = -1.5
+		m.h = 1.5
+	*/
+	m.x = -2.0
+	m.w = 2.0
+	m.y = -2.0
+	m.h = 2.0
 
 	return &m
+}
+
+func (m *Mandelbrot) Save(filename string) error {
+	if err := m.img.Save(filename); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *Mandelbrot) SetEpsilon(epsilon float64) {
@@ -79,8 +86,24 @@ func (m *Mandelbrot) Render() {
 	var z complex128
 	var c complex128
 
+	// Calculating the width
+	pixel_width := (math.Abs(m.x) + m.w) / m.epsilon
+	pixel_height := (math.Abs(m.y) + m.h) / m.epsilon
+
+	// Calculating the offset
+	xoffset := pixel_width / 2
+	yoffset := pixel_height / 2
+
+	// Calculating the scale
+	xscale := pixel_width * m.epsilon * 100
+	yscale := pixel_height * m.epsilon * 100
+
+	// NOW the image should be created. We know its size.
+	m.img = NewImage(int(pixel_width), int(pixel_height), palette.Plan9[0])
+
 	fmt.Printf("\n === Render === \nC=%g, Bounds=([%1.2f, %1.2f], [%1.2f, %1.2f]), Epsilon=%1.5f\n", m.initial_c, m.x, m.y, m.w, m.h, m.epsilon)
 	// Loop from x=-2.0 to x=2.0
+
 	for x := m.x; x <= m.w; x += m.epsilon {
 		// Loop from y=-2.0 to y=2.0
 		for y := m.y; y <= m.h; y += m.epsilon {
@@ -90,15 +113,15 @@ func (m *Mandelbrot) Render() {
 			z = complex(x, y)
 			c = m.initial_c
 
-			fmt.Printf("\r")
-			fmt.Printf("Iterating: (%1.2f, %1.2f)", x, y)
-
 			for cmplx.Abs(z) < 2 && iterations < m.max_iterations {
 				z = z*z + c
 				iterations++
 
-				xplot := int(m.xoffset + x*m.xzoom)
-				yplot := int(m.yoffset + y*m.yzoom)
+				xplot := int((x * xscale) + xoffset)
+				yplot := int((y * yscale) + yoffset)
+
+				fmt.Printf("\r")
+				fmt.Printf("Plot: (%d,%d)", xplot, yplot)
 
 				if iterations == 0 {
 					m.img.Plot(xplot, yplot, palette.Plan9[0])

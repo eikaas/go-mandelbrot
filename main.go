@@ -4,11 +4,10 @@ import "os"
 import "fmt"
 import "log"
 import "flag"
-import "image/color/palette"
 
 func main() {
-	image_width := flag.Int("W", 512, "Image width")
-	image_height := flag.Int("H", 512, "Image height")
+	//image_width := flag.Int("W", 512, "Image width")
+	//image_height := flag.Int("H", 512, "Image height")
 	filename := flag.String("F", "filename.png", "Filename to save to")
 
 	iterations := flag.Int("i", 128, "Maximum iterations per step")
@@ -39,8 +38,7 @@ func main() {
 	}
 
 	log.Println("[*] Initializing...")
-	img := NewImage(*image_width, *image_height, palette.Plan9[0])
-	mandelbrot := NewMandelbrot(img)
+	mandelbrot := NewMandelbrot()
 
 	mandelbrot.SetBounds(*bounds_x, *bounds_y, *bounds_w, *bounds_h)
 	mandelbrot.SetEpsilon(*epsilon)
@@ -52,7 +50,7 @@ func main() {
 	log.Println("[*] Rendering...")
 	mandelbrot.Render()
 
-	if err := img.Save(*filename); err != nil {
-		fmt.Fprintf(os.Stderr, "There was an error saving the image:", err)
+	if err := mandelbrot.Save(*filename); err != nil {
+		fmt.Println("Unable to save the file:", err)
 	}
 }
