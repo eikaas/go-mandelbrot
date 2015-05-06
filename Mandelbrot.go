@@ -24,17 +24,10 @@ type Mandelbrot struct {
 func NewMandelbrot() *Mandelbrot {
 	var m Mandelbrot
 
+	// Set some defaults which produce a useable output
 	m.initial_c = complex(-1.0, -0.25)
-
 	m.max_iterations = 10
 	m.epsilon = 0.0005
-
-	/*
-		m.x = -1.5
-		m.w = 1.5
-		m.y = -1.5
-		m.h = 1.5
-	*/
 	m.x = -2.0
 	m.w = 2.0
 	m.y = -2.0
