@@ -7,9 +7,10 @@ import "image/color"
 import "image/png"
 
 type Image struct {
-	data   *image.RGBA
-	width  int
-	height int
+	data       *image.RGBA
+	image_data [][]int
+	width      int
+	height     int
 }
 
 func (i *Image) GetHeight() int {
