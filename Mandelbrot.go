@@ -9,7 +9,7 @@ type Mandelbrot struct {
 	img *Image // Pointer to the image were drawing to as defined in Image.go, not the std lib "image"
 
 	// grid for storing the image data.
-	grid [800][800]int
+	grid [][]int // Not used, stays just in case / testing
 
 	max_iterations int     // Max iterations.
 	epsilon        float64 // Step-size of the simulation. Improves sharpness
@@ -28,6 +28,7 @@ type Mandelbrot struct {
 	initial_c complex128 // Initial value of C. Interesting
 }
 
+// Not used
 func (m *Mandelbrot) Plot(x, y, iter int) {
 	m.grid[x][y] = iter
 }
@@ -134,21 +135,20 @@ func (m *Mandelbrot) Render() {
 				fmt.Printf("Plot: (%d,%d), offset: %f, %f", xplot, yplot, m.xoffset, m.yoffset)
 
 				if iterations == 0 {
-					m.Plot(xplot, yplot, iterations) // Plotting to an array
-					//m.img.Plot(xplot, yplot, palette.Plan9[0]) // Plotting to image
-					// No real difference.
+					//m.Plot(xplot, yplot, iterations) // Plotting to an array
+					m.img.Plot(xplot, yplot, palette.Plan9[0]) // Plotting to image
 				} else if iterations == 256 {
-					m.Plot(xplot, yplot, iterations)
-					//m.img.Plot(xplot, yplot, palette.Plan9[0])
+					//m.Plot(xplot, yplot, iterations)
+					m.img.Plot(xplot, yplot, palette.Plan9[0])
 
 				} else {
-					m.Plot(xplot, yplot, iterations)
-					//m.img.Plot(xplot, yplot, palette.Plan9[255/iterations])
+					//m.Plot(xplot, yplot, iterations)
+					m.img.Plot(xplot, yplot, palette.Plan9[255/iterations])
 				}
 
 			}
 		}
 	}
 	fmt.Printf("\nFinished!\n\n")
-	m.SaveToImage()
+	//m.SaveToImage() Not used.
 }
