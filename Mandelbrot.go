@@ -5,8 +5,13 @@ import "math/cmplx"
 import "image/color/palette"
 
 type Mandelbrot struct {
+	// Console output
+	verbose bool
+	debug   bool
+
 	// We are currently plotting to an Image object. This is a small
-	// and perhaps useless wrapper around the golang stdlib image image/png library.
+	// and perhaps useless wrapper around the golang stdlib image image/png library
+	// Image.go simply came along since it already did the saving to png and stuff.
 	// It can easily be swapped out to something better, or even a realtime/game library.
 	img *Image
 
@@ -34,13 +39,6 @@ type Mandelbrot struct {
 	bounds_y float64
 	bounds_h float64
 
-	epsilon    float64 // Deprecated
-	x, y, w, h float64 // Deprecated
-
-	// These are nonsensical. Deprecated
-	xzoom float64 // x-axis zoom level.
-	yzoom float64 // y-axis zoom level
-
 	// The heart of the object. Changing this will result in radical changes in the way the
 	// fractal bends, twists and warps. This contains the starting value.
 	initial_c complex128 // Initial value of C. Interesting
@@ -48,10 +46,17 @@ type Mandelbrot struct {
 
 func NewMandelbrot() *Mandelbrot {
 	var m Mandelbrot
-
-	//TODO: Set some sane defaults here.
-
+	// Some sane defaults that will make it render regardless of any parameters are passed
 	m.initial_c = complex(-1.0, -0.25)
+
+	m.render_width = 1024
+	m.render_height = 1024
+	m.max_iterations = 128
+
+	m.bounds_x = -2.0
+	m.bounds_w = 2.0
+	m.bounds_y = -2.0
+	m.bounds_h = 2.0
 
 	return &m
 }
@@ -85,6 +90,22 @@ func (m *Mandelbrot) SetMaxIterations(iterations int) {
 
 func (m *Mandelbrot) SetInitialC(c1, c2 float64) {
 	m.initial_c = complex(c1, c2)
+}
+
+func (m *Mandelbrot) Verbose(status bool) {
+	if status {
+		m.verbose = true
+	} else {
+		m.verbose = false
+	}
+}
+
+func (m *Mandelbrot) Debug(status bool) {
+	if status {
+		m.debug = true
+	} else {
+		m.debug = false
+	}
 }
 
 /*
@@ -122,15 +143,23 @@ func (m *Mandelbrot) Render() {
 	var z complex128
 	var c complex128
 
-	m.xepsilon = (m.w - m.x) / float64(m.render_width)
-	m.yepsilon = (m.h - m.y) / float64(m.render_height)
+	m.xepsilon = (m.bounds_w - m.bounds_x) / float64(m.render_width)
+	m.yepsilon = (m.bounds_h - m.bounds_y) / float64(m.render_height)
 
 	m.xoffset = m.render_width / 2
 	m.yoffset = m.render_height / 2
 
 	m.img = NewImage(int(m.render_width), int(m.render_height), palette.Plan9[0])
 
-	//fmt.Printf("\n === Render === \nC=%g, Bounds: mx:%1.2f, mw:%1.2f], my:%1.2f, mh:%1.2f, Epsilon=%1.5f\n", m.initial_c, m.x, m.w, m.y, m.h, m.epsilon)
+	if m.verbose {
+		fmt.Printf("[*] Starting render\n")
+		fmt.Printf(" == Render Info == \n")
+		fmt.Printf("Initial value of C: %g\n", m.initial_c)
+		fmt.Printf("Bounds: [(%1.2f, %1.2f), (%1.2f,%1.2f)]\n", m.bounds_x, m.bounds_w, m.bounds_y, m.bounds_h)
+		fmt.Printf("Epsilon: %1.3f,%1.3f\n", m.xepsilon, m.yepsilon)
+		fmt.Printf("Render Dimension: %dx%d\n", m.render_width, m.render_height)
+		fmt.Printf("Offset: %dx%d\n\n", m.xoffset, m.yoffset)
+	}
 
 	for x := m.bounds_x; x <= m.bounds_w; x += m.xepsilon {
 		for y := m.bounds_y; y <= m.bounds_h; y += m.yepsilon {
@@ -147,8 +176,10 @@ func (m *Mandelbrot) Render() {
 				xplot := int((x / m.yepsilon) + float64(m.xoffset))
 				yplot := int((y / m.xepsilon) + float64(m.yoffset))
 
-				fmt.Printf("\r")
-				fmt.Printf("Plot: (%d,%d), offset: %f, %f", xplot, yplot, m.xoffset, m.yoffset)
+				if m.verbose {
+					fmt.Printf("\r")
+					fmt.Printf("Rendering %d/%d", xplot, m.render_width)
+				}
 
 				if iterations == 0 {
 					//m.Plot(xplot, yplot, iterations) // Plotting to an array
@@ -165,6 +196,7 @@ func (m *Mandelbrot) Render() {
 			}
 		}
 	}
-	fmt.Printf("\nFinished!\n\n")
-	m.img.Save()
+	if m.verbose {
+		fmt.Printf("\nFinished!\n\n")
+	}
 }
