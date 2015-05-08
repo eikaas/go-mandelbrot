@@ -108,7 +108,7 @@ func (m *Mandelbrot) SetInitialC(c1, c2 float64) {
 
 	Epsilon:
 	We need to calculate the step-size (epsilon) for both the x- and y-axis in order to support
-	non-rectangular resolutions:
+	non-square resolutions:
 
 	EpsilonX := (bw - bx) / width
 	EpsilonY := (bh - by) / width
