@@ -5,6 +5,35 @@ import "log"
 import "math/cmplx"
 import "image/color/palette"
 
+/*
+	Given the bounds of the set we are going to render and the resolution
+	we calculate the offset and epsilon.
+
+	Parameters are passed by the commandline:
+	-W1024 -H1024
+	--Bounds=-2,2,-2,2 (bx, bw, by, bh)
+
+	Offset:
+
+	Ow = width / 2
+	Oh = height / 2
+
+	Epsilon:
+	We need to calculate the step-size (epsilon) for both the x- and y-axis in order to support
+	non-rectangular resolutions:
+
+	EpsilonX := (bw - bx) / width
+	EpsilonY := (bh - by) / width
+
+	Zoom:
+	Zooming is accomplished by specifying a smaller subset of the fractal set, or rendering at a higher resolution.
+	No special function needed.
+
+	Random thoughts:
+	We can extend this further and render it realtime. Capturing mouse-input we can map the on-screen coordinate to fractal-set-subset coordinates
+	to enable zooming with a mouse and exploring. Should be absolutely doable. Need Screen-to-fractal-set conversion mathz...
+*/
+
 type Mandelbrot struct {
 	img *Image // Pointer to the image were drawing to as defined in Image.go, not the std lib "image"
 
