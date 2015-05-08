@@ -1,75 +1,48 @@
 package main
 
 import "fmt"
-import "log"
 import "math/cmplx"
 import "image/color/palette"
 
-/*
-	Given the bounds of the set we are going to render and the resolution
-	we calculate the offset and epsilon.
-
-	Parameters are passed by the commandline:
-	-W1024 -H1024
-	--Bounds=-2,2,-2,2 (bx, bw, by, bh)
-
-	Offset:
-
-	Ow = width / 2
-	Oh = height / 2
-
-	Epsilon:
-	We need to calculate the step-size (epsilon) for both the x- and y-axis in order to support
-	non-rectangular resolutions:
-
-	EpsilonX := (bw - bx) / width
-	EpsilonY := (bh - by) / width
-
-	Zoom:
-	Zooming is accomplished by specifying a smaller subset of the fractal set, or rendering at a higher resolution.
-	No special function needed.
-
-	Random thoughts:
-	We can extend this further and render it realtime. Capturing mouse-input we can map the on-screen coordinate to fractal-set-subset coordinates
-	to enable zooming with a mouse and exploring. Should be absolutely doable. Need Screen-to-fractal-set conversion mathz...
-*/
-
 type Mandelbrot struct {
-	img *Image // Pointer to the image were drawing to as defined in Image.go, not the std lib "image"
+	// We are currently plotting to an Image object. This is a small
+	// and perhaps useless wrapper around the golang stdlib image image/png library.
+	// It can easily be swapped out to something better, or even a realtime/game library.
+	img *Image
 
-	// grid for storing the image data.
-	grid [][]int // Not used, stays just in case / testing
-
-	max_iterations int     // Max iterations.
-	epsilon        float64 // Step-size of the simulation. Improves sharpness
-
-	x, y, w, h float64 // The convergance box. Mandelbrot: -2,2 -2,2
-
+	// The pixel size of the object we are rendering to.
+	// TODO: Change to int and cast elsewhere.
 	image_width  float64
 	image_height float64
 
-	xoffset float64 // Screen/Camera offset, x
-	yoffset float64 // Screen/Camera offset, y
+	// The offset is calculated by dividing the width/height by two.
+	xoffset float64
+	yoffset float64
 
+	// The max number of iterations for each step through the mandelbrot set
+	max_iterations int
+
+	epsilon_x float64
+	epsilon_y float64
+
+	// The mandelbrot set is contained betweeb (-2,2), (-2,2)
+	// We usualy render a subset within this range. Zooming is done
+	// by making these values converge towards eachother: (-1.995, 1.995...)
+	bounds_x float64
+	bounds_w float64
+	bounds_y float64
+	bounds_h float64
+
+	epsilon    float64 // Deprecated
+	x, y, w, h float64 // Deprecated
+
+	// These are nonsensical. Deprecated
 	xzoom float64 // x-axis zoom level.
 	yzoom float64 // y-axis zoom level
 
+	// The heart of the object. Changing this will result in radical changes in the way the
+	// fractal bends, twists and warps. This contains the starting value.
 	initial_c complex128 // Initial value of C. Interesting
-}
-
-// Not used
-func (m *Mandelbrot) Plot(x, y, iter int) {
-	m.grid[x][y] = iter
-}
-
-func (m *Mandelbrot) SaveToImage() {
-	log.Println("[*] Generate Image")
-	for x := 0; x < int(m.image_width); x++ {
-		for y := 0; y < int(m.image_height); y++ {
-			m.img.Plot(x, y, palette.Plan9[m.grid[x][y]])
-		}
-	}
-
 }
 
 func NewMandelbrot() *Mandelbrot {
@@ -119,6 +92,35 @@ func (m *Mandelbrot) SetInitialC(c1, c2 float64) {
 	m.initial_c = complex(c1, c2)
 }
 
+/*
+	TODO: Update the render function
+	Given the bounds of the set we are going to render and the resolution
+	we calculate the offset and epsilon.
+
+	Parameters are passed by the commandline:
+	-W1024 -H1024
+	--Bounds=-2,2,-2,2 (bx, bw, by, bh)
+
+	Offset:
+
+	Ow = width / 2
+	Oh = height / 2
+
+	Epsilon:
+	We need to calculate the step-size (epsilon) for both the x- and y-axis in order to support
+	non-rectangular resolutions:
+
+	EpsilonX := (bw - bx) / width
+	EpsilonY := (bh - by) / width
+
+	Zoom:
+	Zooming is accomplished by specifying a smaller subset of the fractal set, or rendering at a higher resolution.
+	No special function needed.
+
+	Random thoughts:
+	We can extend this further and render it realtime. Capturing mouse-input we can map the on-screen coordinate to fractal-set-subset coordinates
+	to enable zooming with a mouse and exploring. Should be absolutely doable. Need Screen-to-fractal-set conversion mathz...
+*/
 func (m *Mandelbrot) Render() {
 	var iterations int
 
