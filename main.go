@@ -13,18 +13,15 @@ func main() {
 	var bounds_w float64
 	var bounds_y float64
 	var bounds_h float64
-	var zoom_x float64
-	var zoom_y float64
+
+	var render_height int
+	var render_width int
 
 	filename := flag.String("F", "filename.png", "Filename to save to")
 
 	iterations := flag.Int("i", 128, "Maximum iterations per step")
 
-	epsilon := flag.Float64("e", 0.005, "Epsilon: Set-iteration step-size")
-
 	bounds := flag.String("bounds", "", "Set bounds. x,w,y,h ie. \"-2.0,2.0,-2.0,2.0\"")
-
-	zoom := flag.String("zoom", "", "Set x and y zoom")
 
 	initial_c1 := flag.Float64("c1", -1.0, "Initial value of the complex number C, first value")
 	initial_c2 := flag.Float64("c2", -0.25, "Initial value of the complex number C, second value")
@@ -36,31 +33,6 @@ func main() {
 	if *help {
 		flag.Usage()
 		os.Exit(0)
-	}
-
-	// -zoom supplied
-	if *zoom != "" {
-		s := strings.Split(*zoom, ",")
-		if len(s) != 2 {
-			log.Println("Need exactly two zoom values: x,y")
-			os.Exit(1)
-		}
-
-		zoom_x, err = strconv.ParseFloat(s[0], 64)
-		if err != nil {
-			fmt.Println("Error parsing zoom value x")
-			os.Exit(2)
-		}
-
-		zoom_y, err = strconv.ParseFloat(s[1], 64)
-		if err != nil {
-			fmt.Println("Error parsing zoom value y")
-			os.Exit(2)
-		}
-	} else {
-		// Default
-		zoom_x = 100
-		zoom_y = 100
 	}
 
 	// -bounds supplied
@@ -117,10 +89,10 @@ func main() {
 	mandelbrot := NewMandelbrot()
 
 	// Configure the mandelbrot either by defaults or by params
+	mandelbrot.SetRenderHeight(render_height)
+	mandelbrot.SetRenderWidth(render_width)
 	mandelbrot.SetBounds(bounds_x, bounds_y, bounds_w, bounds_h)
-	mandelbrot.SetEpsilon(*epsilon)
 	mandelbrot.SetMaxIterations(*iterations)
-	mandelbrot.SetZoom(zoom_x, zoom_y)
 	mandelbrot.SetInitialC(*initial_c1, *initial_c2)
 
 	log.Println("[*] Rendering...")

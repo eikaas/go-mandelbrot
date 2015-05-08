@@ -12,18 +12,19 @@ type Mandelbrot struct {
 
 	// The pixel size of the object we are rendering to.
 	// TODO: Change to int and cast elsewhere.
-	image_width  float64
-	image_height float64
+	render_width  int
+	render_height int
 
-	// The offset is calculated by dividing the width/height by two.
-	xoffset float64
-	yoffset float64
+	// The offset is half the width or height. If the width or height is not
+	// divisible by two we risk a small error to the offset. Most likely unnoticable
+	xoffset int
+	yoffset int
 
 	// The max number of iterations for each step through the mandelbrot set
 	max_iterations int
 
-	epsilon_x float64
-	epsilon_y float64
+	xepsilon float64
+	yepsilon float64
 
 	// The mandelbrot set is contained betweeb (-2,2), (-2,2)
 	// We usualy render a subset within this range. Zooming is done
@@ -48,14 +49,9 @@ type Mandelbrot struct {
 func NewMandelbrot() *Mandelbrot {
 	var m Mandelbrot
 
-	// Set some defaults which produce a useable output
+	//TODO: Set some sane defaults here.
+
 	m.initial_c = complex(-1.0, -0.25)
-	m.max_iterations = 10
-	m.epsilon = 0.0005
-	m.x = -2.0
-	m.w = 2.0
-	m.y = -2.0
-	m.h = 2.0
 
 	return &m
 }
@@ -68,20 +64,19 @@ func (m *Mandelbrot) Save(filename string) error {
 	return nil
 }
 
-func (m *Mandelbrot) SetEpsilon(epsilon float64) {
-	m.epsilon = epsilon
-}
-
 func (m *Mandelbrot) SetBounds(x, y, w, h float64) {
-	m.x = x
-	m.y = y
-	m.w = w
-	m.h = h
+	m.bounds_x = x
+	m.bounds_y = y
+	m.bounds_w = w
+	m.bounds_h = h
 }
 
-func (m *Mandelbrot) SetZoom(x, y float64) {
-	m.xzoom = x
-	m.yzoom = y
+func (m *Mandelbrot) SetRenderHeight(height int) {
+	m.render_height = height
+}
+
+func (m *Mandelbrot) SetRenderWidth(width int) {
+	m.render_width = width
 }
 
 func (m *Mandelbrot) SetMaxIterations(iterations int) {
@@ -127,28 +122,18 @@ func (m *Mandelbrot) Render() {
 	var z complex128
 	var c complex128
 
-	// Correct for m.w > m.x
-	m.image_width = (m.w - m.x) / m.epsilon
+	m.xepsilon = (m.w - m.x) / float64(m.render_width)
+	m.yepsilon = (m.h - m.y) / float64(m.render_height)
 
-	// Correct for m.h > m.y
-	m.image_height = (m.h - m.y) / m.epsilon
+	m.xoffset = m.render_width / 2
+	m.yoffset = m.render_height / 2
 
-	// Correct
-	m.xoffset = m.image_width / 2
-	m.yoffset = m.image_height / 2
+	m.img = NewImage(int(m.render_width), int(m.render_height), palette.Plan9[0])
 
-	// Testing with array instead. No diff....
-	m.img = NewImage(int(m.image_width), int(m.image_height), palette.Plan9[0])
+	//fmt.Printf("\n === Render === \nC=%g, Bounds: mx:%1.2f, mw:%1.2f], my:%1.2f, mh:%1.2f, Epsilon=%1.5f\n", m.initial_c, m.x, m.w, m.y, m.h, m.epsilon)
 
-	// faster pixel storage?
-	fmt.Println("arr:", int(m.image_width*m.image_height))
-
-	fmt.Printf("\n === Render === \nC=%g, Bounds: mx:%1.2f, mw:%1.2f], my:%1.2f, mh:%1.2f, Epsilon=%1.5f\n", m.initial_c, m.x, m.w, m.y, m.h, m.epsilon)
-	// Loop from x=-2.0 to x=2.0
-
-	for x := m.x; x <= m.w; x += m.epsilon {
-		// Loop from y=-2.0 to y=2.0
-		for y := m.y; y <= m.h; y += m.epsilon {
+	for x := m.bounds_x; x <= m.bounds_w; x += m.xepsilon {
+		for y := m.bounds_y; y <= m.bounds_h; y += m.yepsilon {
 
 			iterations = 0
 
@@ -159,8 +144,8 @@ func (m *Mandelbrot) Render() {
 				z = z*z + c
 				iterations++
 
-				xplot := int((x / m.epsilon) + m.xoffset)
-				yplot := int((y / m.epsilon) + m.yoffset)
+				xplot := int((x / m.yepsilon) + float64(m.xoffset))
+				yplot := int((y / m.xepsilon) + float64(m.yoffset))
 
 				fmt.Printf("\r")
 				fmt.Printf("Plot: (%d,%d), offset: %f, %f", xplot, yplot, m.xoffset, m.yoffset)
@@ -181,5 +166,5 @@ func (m *Mandelbrot) Render() {
 		}
 	}
 	fmt.Printf("\nFinished!\n\n")
-	//m.SaveToImage() Not used.
+	m.img.Save()
 }
